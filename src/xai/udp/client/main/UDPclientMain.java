@@ -48,6 +48,8 @@ public class UDPclientMain {
 		keys.add(new Key("k2", "localhost", 5838));
 		keys.add(new Key("k3", "localhost", 5836));
 		keys.add(new Key("k4", "localhost", 5836));
+		keys.add(new Key("k5", "localhost", 5838));
+
 		
 
 		RemoteMapUDPclient rm = new RemoteMapUDPclient();

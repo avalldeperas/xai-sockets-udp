@@ -76,33 +76,43 @@ public class RemoteMapUDPclient {
 		
 		String resposta = null;
 		
-		/* TODO: implementació de la part client UDP / implementación de la parte cliente UDP */
+		return sendReceive(key, server_address, server_port);
+	}
+
+	private String sendReceive(String key, String server_address, int server_port) {
 		InetAddress addr;
 		DatagramSocket socket;
 		DatagramPacket packetSend, packetReceive;
 		byte[] bytes_message = new byte[256];
+		String response = null;
 		
 		try {
 			socket = new DatagramSocket();			
 			addr = InetAddress.getByName(server_address);
-			byte[] bytes = key.getBytes();
-
-			packetSend = new DatagramPacket(bytes, key.length(), addr, server_port);
-			socket.send(packetSend);
 			
+			packetSend = new DatagramPacket(key.getBytes(), key.length(), addr, server_port);
+			LSimLogger.log(Level.INFO, "Enviant petici� " + key + " a la adreca " + server_address +":" + server_port);
+			socket.send(packetSend);
+			LSimLogger.log(Level.INFO, "Enviat!");
+
 			packetReceive = new DatagramPacket(bytes_message, bytes_message.length);
+			LSimLogger.log(Level.INFO, "Esperem la resposta del servidor...");
+
 			socket.receive(packetReceive);
-			resposta = new String(packetReceive.getData(), packetReceive.getOffset(), packetReceive.getLength());
-			LSimLogger.log(Level.INFO, "resposta = " + resposta + " //  size = " + resposta.length());
+			response = new String(packetReceive.getData(), packetReceive.getOffset(), packetReceive.getLength());
+			LSimLogger.log(Level.INFO, "Resposta Rebuda: " + response);
 			
 			socket.close();
 		} catch (SocketException | SecurityException e) {
 			e.printStackTrace();
-			System.err.println(e);
+			System.err.println(e.getMessage());
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.err.println(e.getMessage());
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
 		}
 		
-		return resposta;
+		return response;
 	}
 }

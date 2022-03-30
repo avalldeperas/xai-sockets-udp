@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -47,29 +45,52 @@ public class RemoteMapUDPservidor {
 		LSimLogger.log(Level.INFO, "server_port: " + server_port);
 		LSimLogger.log(Level.INFO, "map: " + map);
 
-		/* TODO: implementaciÃ³ de la part servidor UDP / implementaciÃ³n de la parte servidor UDP */
 		DatagramSocket socket;
-		DatagramPacket packet;
-		byte[] bytes_message = new byte[256];
 		try {
 			socket = new DatagramSocket(server_port);
-			packet = new DatagramPacket(bytes_message, bytes_message.length);
-			socket.receive(packet);
-			LSimLogger.log(Level.INFO, "Adreça IP del remitent: " + packet.getAddress());
-			LSimLogger.log(Level.INFO, "Port del remitent: " + packet.getPort());
 			
-			String message = new String(packet.getData(), packet.getOffset(), packet.getLength());
-			String value = map.get(message);
-			LSimLogger.log(Level.INFO, "Responent valor agafat del map: " + value);
+			TimerTask task = new TimerTask() {
+				@Override
+				public void run() {
+					receiveSend(map, socket);
+				}
+			};
+			Timer timer = new Timer("Timer");
+			timer.schedule(task, 3000, 3000);
 			
-			packet = new DatagramPacket(value.getBytes(), value.length(), packet.getAddress(), packet.getPort());
-			socket.send(packet);
-			
-			socket.close();
 		} catch (SocketException e) {
 			e.printStackTrace();
+			System.err.println(e.getMessage());
+		} 
+	}
+
+	private void receiveSend(Map<String, String> map, DatagramSocket socket) {
+		byte[] bytes_message = new byte[256];
+		DatagramPacket packetReceive, packetSend;
+				
+		try {
+			// Receive packet
+			packetReceive = new DatagramPacket(bytes_message, bytes_message.length);
+			socket.receive(packetReceive);
+			LSimLogger.log(Level.INFO, "Adreça IP del remitent: " + packetReceive.getAddress());
+			LSimLogger.log(Level.INFO, "Port del remitent: " + packetReceive.getPort());
+			String response = buildResponse(map, packetReceive);			
+			
+			// Send packet
+			packetSend = new DatagramPacket(response.getBytes(), response.length(), packetReceive.getAddress(), packetReceive.getPort());
+			LSimLogger.log(Level.INFO, "Responent el valor '" + response + "' a " + packetReceive.getAddress() +":" + packetReceive.getPort());
+			socket.send(packetSend);
+			LSimLogger.log(Level.INFO, "Enviat!");
+			
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
+	}
+
+	private String buildResponse(Map<String, String> map, DatagramPacket packetReceive) {
+		String message = new String(packetReceive.getData(), packetReceive.getOffset(), packetReceive.getLength());
+		
+		return map.getOrDefault(message, "key-not-found");
 	}
 }
